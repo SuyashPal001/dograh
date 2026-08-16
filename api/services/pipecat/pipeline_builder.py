@@ -38,6 +38,8 @@ def build_pipeline(
     termination_funnel,
     voicemail_detector=None,
     recording_router=None,
+    pre_llm_processors=None,
+    post_llm_processors=None,
 ):
     """Build the main pipeline with all components.
 
@@ -49,6 +51,12 @@ def build_pipeline(
         recording_router: Optional RecordingRouterProcessor. When provided,
             inserts between callback processor and TTS to route between
             pre-recorded audio playback and dynamic TTS.
+        pre_llm_processors: Optional processors placed after transcription and
+            before the user context aggregator, so they observe finalized
+            transcriptions and can gate the LLMContextFrame the aggregator emits.
+        post_llm_processors: Optional processors placed between the LLM and TTS,
+            ahead of the engine callback processor, so they see generated text
+            before it is synthesized.
     """
     # Build processors list with optional voicemail detection.
     #
@@ -74,9 +82,13 @@ def build_pipeline(
         processors.append(voicemail_detector.detector())
 
     # Continue with the rest of the pipeline
-    post_llm = [pipeline_engine_callback_processor]
+    post_llm = list(post_llm_processors or [])
+    post_llm.append(pipeline_engine_callback_processor)
     if recording_router:
         post_llm.append(recording_router)
+
+    if pre_llm_processors:
+        processors.extend(pre_llm_processors)
 
     processors.append(user_context_aggregator)
 
