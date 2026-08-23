@@ -14,6 +14,7 @@ from api.schemas.workflow_configurations import (
     DEFAULT_SMART_TURN_STOP_SECS,
     DEFAULT_TURN_START_MIN_WORDS,
     DEFAULT_TURN_START_STRATEGY,
+    DEFAULT_VAD_STOP_SECS,
     WorkflowConfigurationDefaults,
 )
 from api.services.call_concurrency import call_concurrency
@@ -52,6 +53,7 @@ from api.services.pipecat.realtime_feedback_observer import (
     RealtimeFeedbackObserver,
     register_turn_log_handlers,
 )
+from api.services.pipecat.turn_latency_observer import TurnLatencyObserver
 from api.services.pipecat.recording_audio_cache import (
     create_recording_audio_fetcher,
     warm_recording_cache,
@@ -151,6 +153,20 @@ def _resolve_provisional_vad_pause_secs(run_configs: dict) -> float:
     )
 
 
+def _resolve_vad_stop_secs(run_configs: dict) -> float:
+    """Silence budget Silero waits before firing VADUserStoppedSpeakingFrame.
+
+    Lower values make the stop event fire faster. When turn_stop_strategy
+    is ``"turn_analyzer"`` the event only wakes Smart Turn V3 for a
+    decision; it does not by itself end the user turn.
+
+    The Silero frame is 32 ms at both 8 kHz and 16 kHz, so any value
+    below one frame is meaningless.
+    """
+    value = float(run_configs.get("vad_stop_secs", DEFAULT_VAD_STOP_SECS))
+    return max(0.032, value)
+
+
 def _create_non_realtime_user_turn_start_strategies(
     run_configs: dict, *, uses_external_turns: bool
 ):
@@ -207,7 +223,7 @@ def _create_non_realtime_user_turn_stop_strategies(
     return [SpeechTimeoutUserTurnStopStrategy()]
 
 
-def _create_realtime_user_turn_config(provider: str):
+def _create_realtime_user_turn_config(provider: str, *, vad_stop_secs: float):
     """Return user turn strategies and optional local VAD for realtime providers."""
 
     def external_provider_turn_config():
@@ -227,7 +243,7 @@ def _create_realtime_user_turn_config(provider: str):
                 ],
                 stop=[SpeechTimeoutUserTurnStopStrategy(wait_for_transcript=False)],
             ),
-            SileroVADAnalyzer(params=VADParams(stop_secs=0.2)),
+            SileroVADAnalyzer(params=VADParams(stop_secs=vad_stop_secs)),
         )
 
     if provider in {
@@ -897,7 +913,10 @@ async def _run_pipeline_impl(
         FunctionCallUserMuteStrategy(),
         CallbackUserMuteStrategy(should_mute_callback=engine.should_mute_user),
     ]
-    user_vad_analyzer = SileroVADAnalyzer(params=VADParams(stop_secs=0.2))
+    resolved_vad_stop_secs = _resolve_vad_stop_secs(run_configs)
+    user_vad_analyzer = SileroVADAnalyzer(
+        params=VADParams(stop_secs=resolved_vad_stop_secs)
+    )
 
     # Configure turn strategies based on STT provider, model, and workflow configuration
     if is_realtime:
@@ -905,7 +924,8 @@ async def _run_pipeline_impl(
         # Realtime services still need user-turn tracking even when the model
         # itself owns speech generation and interruption behavior.
         user_turn_strategies, user_vad_analyzer = _create_realtime_user_turn_config(
-            user_config.realtime.provider
+            user_config.realtime.provider,
+            vad_stop_secs=resolved_vad_stop_secs,
         )
     else:
         # Some STT services emit their own turn boundaries, so the aggregator
@@ -1109,6 +1129,17 @@ async def _run_pipeline_impl(
         logs_buffer=in_memory_logs_buffer,
     )
     task.add_observer(feedback_observer)
+
+    # Turn / LLM / TTS latency probe for the low-latency Silero + Smart Turn
+    # experiment. Off by default; enable per workflow by setting
+    # ``enable_turn_latency_logs=true`` in workflow_configurations.
+    if bool(run_configs.get("enable_turn_latency_logs", False)):
+        task.add_observer(
+            TurnLatencyObserver(
+                workflow_run_id=workflow_run_id,
+                vad_stop_secs=resolved_vad_stop_secs,
+            )
+        )
 
     # Initialize the engine to set the initial context with
     # System Prompt and Tools

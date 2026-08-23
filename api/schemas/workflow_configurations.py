@@ -26,6 +26,8 @@ DEFAULT_TURN_START_STRATEGY = "default"
 DEFAULT_TURN_START_MIN_WORDS = 3
 DEFAULT_PROVISIONAL_VAD_PAUSE_SECS = 1.5
 DEFAULT_TURN_STOP_STRATEGY = "transcription"
+DEFAULT_VAD_STOP_SECS = 0.2
+DEFAULT_ENABLE_TURN_LATENCY_LOGS = False
 DEFAULT_CONTEXT_COMPACTION_ENABLED = False
 MAX_CALL_DISPOSITIONS = 50
 MAX_CALL_DISPOSITION_CODE_LENGTH = 64
@@ -153,6 +155,10 @@ class WorkflowConfigurationDefaults(BaseModel):
     turn_stop_strategy: Literal["transcription", "turn_analyzer"] = (
         DEFAULT_TURN_STOP_STRATEGY
     )
+    vad_stop_secs: float = Field(
+        default=DEFAULT_VAD_STOP_SECS, ge=0.032, le=2.0
+    )
+    enable_turn_latency_logs: bool = DEFAULT_ENABLE_TURN_LATENCY_LOGS
     dictionary: str = ""
     context_compaction_enabled: bool = DEFAULT_CONTEXT_COMPACTION_ENABLED
     call_dispositions: list[CallDispositionOption] = Field(
