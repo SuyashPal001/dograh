@@ -8,6 +8,8 @@ from api.db import db_client
 from api.enums import WorkflowRunMode
 from api.errors.failure import mark_failure_reported
 from api.schemas.workflow_configurations import (
+    DEFAULT_DEEPGRAM_ENDPOINTING_MS,
+    DEFAULT_DEEPGRAM_TTFS_P99_LATENCY_S,
     DEFAULT_MAX_CALL_DURATION_SECONDS,
     DEFAULT_MAX_USER_IDLE_TIMEOUT_SECONDS,
     DEFAULT_PROVISIONAL_VAD_PAUSE_SECS,
@@ -165,6 +167,32 @@ def _resolve_vad_stop_secs(run_configs: dict) -> float:
     """
     value = float(run_configs.get("vad_stop_secs", DEFAULT_VAD_STOP_SECS))
     return max(0.032, value)
+
+
+def _resolve_deepgram_endpointing_ms(run_configs: dict) -> int:
+    """Deepgram (non-Flux) silence threshold before finalizing a transcript.
+
+    Lower values shorten the STT-side wait before the finalized transcript
+    reaches the aggregator. Safe to lower aggressively when a stop strategy
+    (Smart Turn V3) is filtering false end-of-turn signals downstream.
+    """
+    return max(
+        10,
+        int(run_configs.get("deepgram_endpointing_ms", DEFAULT_DEEPGRAM_ENDPOINTING_MS)),
+    )
+
+
+def _resolve_deepgram_ttfs_p99_latency_s(run_configs: dict) -> float | None:
+    """Override for pipecat's built-in Deepgram TTFS p99 (default 0.35 s).
+
+    Used as the safety-net timeout by the user-turn stop strategies while
+    they wait for the finalized transcript after VAD stop. ``None`` keeps
+    pipecat's default.
+    """
+    value = run_configs.get("deepgram_ttfs_p99_latency_s", DEFAULT_DEEPGRAM_TTFS_P99_LATENCY_S)
+    if value is None:
+        return None
+    return float(value)
 
 
 def _create_non_realtime_user_turn_start_strategies(
@@ -712,6 +740,8 @@ async def _run_pipeline_impl(
             audio_config,
             keyterms=keyterms,
             correlation_id=mps_correlation_id,
+            deepgram_endpointing_ms=_resolve_deepgram_endpointing_ms(run_configs),
+            deepgram_ttfs_p99_latency_s=_resolve_deepgram_ttfs_p99_latency_s(run_configs),
         )
         tts = create_tts_service(
             user_config,

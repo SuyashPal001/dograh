@@ -253,12 +253,21 @@ def create_stt_service(
     audio_config: "AudioConfig",
     keyterms: list[str] | None = None,
     correlation_id: str | None = None,
+    deepgram_endpointing_ms: int = 100,
+    deepgram_ttfs_p99_latency_s: float | None = None,
 ):
     """Create and return appropriate STT service based on user configuration
 
     Args:
         user_config: User configuration containing STT settings
         keyterms: Optional list of keyterms for speech recognition boosting (Deepgram only)
+        deepgram_endpointing_ms: Deepgram silence threshold (ms) before finalizing a
+            transcript. Only applied to non-Flux Deepgram models. Defaults to 100
+            (dograh's pre-existing value).
+        deepgram_ttfs_p99_latency_s: Overrides pipecat's built-in Deepgram p99 latency
+            used as the STT safety-net timeout in ``TurnAnalyzerUserTurnStopStrategy``
+            and ``SpeechTimeoutUserTurnStopStrategy``. Only applied to non-Flux
+            Deepgram models. ``None`` keeps pipecat's default (0.35 s).
     """
     logger.info(
         f"Creating STT service: provider={user_config.stt.provider}, model={user_config.stt.model}"
@@ -288,18 +297,21 @@ def create_stt_service(
         # Other models than flux
         # Use language from user config, defaulting to "multi" for multilingual support
         language = getattr(user_config.stt, "language", None) or "multi"
-        return DeepgramSTTService(
-            api_key=user_config.stt.api_key,
-            settings=DeepgramSTTSettings(
+        deepgram_kwargs = {
+            "api_key": user_config.stt.api_key,
+            "settings": DeepgramSTTSettings(
                 language=language,
                 profanity_filter=False,
-                endpointing=100,
+                endpointing=deepgram_endpointing_ms,
                 model=user_config.stt.model,
                 keyterm=keyterms or [],
             ),
-            should_interrupt=False,  # Let UserAggregator take care of sending InterruptionFrame
-            sample_rate=audio_config.transport_in_sample_rate,
-        )
+            "should_interrupt": False,  # Let UserAggregator take care of sending InterruptionFrame
+            "sample_rate": audio_config.transport_in_sample_rate,
+        }
+        if deepgram_ttfs_p99_latency_s is not None:
+            deepgram_kwargs["ttfs_p99_latency"] = deepgram_ttfs_p99_latency_s
+        return DeepgramSTTService(**deepgram_kwargs)
     elif user_config.stt.provider == ServiceProviders.OPENAI.value:
         kwargs = {}
         base_url = getattr(user_config.stt, "base_url", None)

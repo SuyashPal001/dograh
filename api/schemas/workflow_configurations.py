@@ -28,6 +28,8 @@ DEFAULT_PROVISIONAL_VAD_PAUSE_SECS = 1.5
 DEFAULT_TURN_STOP_STRATEGY = "transcription"
 DEFAULT_VAD_STOP_SECS = 0.2
 DEFAULT_ENABLE_TURN_LATENCY_LOGS = False
+DEFAULT_DEEPGRAM_ENDPOINTING_MS = 100
+DEFAULT_DEEPGRAM_TTFS_P99_LATENCY_S: float | None = None
 DEFAULT_CONTEXT_COMPACTION_ENABLED = False
 MAX_CALL_DISPOSITIONS = 50
 MAX_CALL_DISPOSITION_CODE_LENGTH = 64
@@ -159,6 +161,12 @@ class WorkflowConfigurationDefaults(BaseModel):
         default=DEFAULT_VAD_STOP_SECS, ge=0.032, le=2.0
     )
     enable_turn_latency_logs: bool = DEFAULT_ENABLE_TURN_LATENCY_LOGS
+    deepgram_endpointing_ms: int = Field(
+        default=DEFAULT_DEEPGRAM_ENDPOINTING_MS, ge=10, le=2000
+    )
+    deepgram_ttfs_p99_latency_s: float | None = Field(
+        default=DEFAULT_DEEPGRAM_TTFS_P99_LATENCY_S, ge=0.05, le=3.0
+    )
     dictionary: str = ""
     context_compaction_enabled: bool = DEFAULT_CONTEXT_COMPACTION_ENABLED
     call_dispositions: list[CallDispositionOption] = Field(
