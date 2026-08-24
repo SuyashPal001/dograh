@@ -1,3 +1,5 @@
+import asyncio
+import hashlib
 from functools import wraps
 from typing import TYPE_CHECKING
 from urllib.parse import urlencode, urlparse, urlunparse
@@ -231,6 +233,189 @@ def stt_uses_external_turns(user_config) -> bool:
 
 class DograhGoogleLLMService(GoogleLLMService):
     adapter_class = DograhGeminiJSONSchemaAdapter
+
+    # Minimum approximate token count (crude 4-chars-per-token estimate — real
+    # tokenization for Hindi/Devanagari/JSON often runs 2-3x denser). Set to 300
+    # so we attempt caching whenever plausibly worth it; if Google's real token
+    # count is below its minimum (~1024 for Gemini 2.5+), the create call errors
+    # and we fall back silently.
+    _DOGRAH_CACHE_MIN_TOKENS = 300
+    # TTL for created cached content (Google charges storage per hour). 1h is
+    # plenty for a call and self-cleans.
+    _DOGRAH_CACHE_TTL_SECONDS = 3600
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # sha256(system_instruction + tools) -> cache resource name.
+        self._dograh_sys_hash_to_cache_name: dict[str, str] = {}
+        # Disabled at runtime if the SDK / model rejects caching.
+        self._dograh_cache_enabled = True
+        # Serialize prewarm attempts so we don't race the create endpoint.
+        self._dograh_prewarm_lock = asyncio.Lock()
+
+    def update_settings(self, delta):
+        """Extend base update_settings to pre-warm the context cache off the
+        user-visible critical path whenever ``system_instruction`` changes.
+
+        pipecat's base flow calls this at pipeline init AND on every node
+        transition (dograh's engine pushes a fresh ``system_instruction`` when
+        the workflow moves to a new node). Both moments are moments where the
+        caller is already waiting on other startup / transition work, so a ~2s
+        Google ``caches.create`` call is invisible to them.
+        """
+        changed = super().update_settings(delta)
+        if "system_instruction" in changed:
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(self._dograh_prewarm_cache())
+            except RuntimeError:
+                # No running loop (rare — mostly test setup). Skip; the lazy
+                # path in _stream_content will create the cache on demand.
+                pass
+        return changed
+
+    async def _dograh_prewarm_cache(self):
+        """Create the cache in the background so the first LLM call is free."""
+        async with self._dograh_prewarm_lock:
+            if not self._dograh_cache_enabled:
+                return
+            fake_params = {
+                "system_instruction": self._settings.system_instruction,
+                "tools": self._tools,
+            }
+            # Reuses the exact same cache-creation logic as the on-demand
+            # path; returns a modified params dict which we discard because
+            # the real _stream_content call will look up the cache by hash.
+            await self._dograh_maybe_apply_cache(fake_params)
+
+    async def _dograh_maybe_apply_cache(self, generation_params: dict) -> dict:
+        """Swap system_instruction + tools for a cached_content reference when possible.
+
+        Google's Gemini caching requires >=1024 tokens of cached content. The
+        system_instruction alone is often too small; combining it with the tool
+        schemas (which are also stable across turns within a node) usually
+        crosses the threshold.
+
+        Returns generation_params unchanged on any failure so the caller can proceed
+        with a normal non-cached inference request.
+        """
+        if not self._dograh_cache_enabled:
+            return generation_params
+
+        sys_instruction = generation_params.get("system_instruction")
+        tools = generation_params.get("tools")
+
+        sys_str = (
+            sys_instruction if isinstance(sys_instruction, str) else str(sys_instruction or "")
+        )
+        tools_str = str(tools or "")
+
+        # Rough 4 chars per token estimate — combines both stable inputs.
+        combined_approx_tokens = (len(sys_str) + len(tools_str)) // 4
+
+        logger.info(
+            f"{self}: [dograh-cache] sys_tokens~{len(sys_str) // 4} "
+            f"tools_tokens~{len(tools_str) // 4} combined~{combined_approx_tokens} "
+            f"min_required={self._DOGRAH_CACHE_MIN_TOKENS} cache_count={len(self._dograh_sys_hash_to_cache_name)}"
+        )
+
+        if not sys_instruction and not tools:
+            return generation_params
+
+        if combined_approx_tokens < self._DOGRAH_CACHE_MIN_TOKENS:
+            return generation_params
+
+        # Hash both parts so different tool sets create different caches.
+        cache_key = hashlib.sha256(
+            (sys_str + "\x00" + tools_str).encode("utf-8")
+        ).hexdigest()
+        cache_name = self._dograh_sys_hash_to_cache_name.get(cache_key)
+
+        if not cache_name:
+            try:
+                from google.genai.types import CreateCachedContentConfig
+
+                config_kwargs = {"ttl": f"{self._DOGRAH_CACHE_TTL_SECONDS}s"}
+                if sys_instruction:
+                    config_kwargs["system_instruction"] = sys_instruction
+                if tools:
+                    config_kwargs["tools"] = tools
+
+                cached = await self._client.aio.caches.create(
+                    model=self._settings.model,
+                    config=CreateCachedContentConfig(**config_kwargs),
+                )
+                cache_name = cached.name
+                self._dograh_sys_hash_to_cache_name[cache_key] = cache_name
+                logger.info(
+                    f"{self}: created explicit context cache {cache_name} "
+                    f"for ~{combined_approx_tokens} tokens (hash={cache_key[:8]})"
+                )
+            except Exception as e:
+                logger.warning(
+                    f"{self}: explicit context cache creation failed; "
+                    f"falling back to non-cached calls for this service instance: {e}"
+                )
+                self._dograh_cache_enabled = False
+                return generation_params
+
+        # cached_content is mutually exclusive with system_instruction and tools.
+        new_params = dict(generation_params)
+        new_params["cached_content"] = cache_name
+        new_params["system_instruction"] = None
+        new_params["tools"] = None
+        return new_params
+
+    async def _stream_content(self, context):
+        # Mirror pipecat's GoogleLLMService._stream_content but inject an explicit
+        # context-cache swap before constructing GenerateContentConfig. Kept in
+        # sync with pipecat/services/google/llm.py `_stream_content`.
+        from pipecat.services.google.llm import (
+            GenerateContentConfig,
+            assert_given,
+        )
+
+        adapter = self.get_llm_adapter()
+        params = adapter.get_llm_invocation_params(
+            context, system_instruction=assert_given(self._settings.system_instruction)
+        )
+
+        logger.debug(
+            f"{self}: Generating chat from context {adapter.get_messages_for_logging(context)}"
+        )
+
+        messages = params["messages"]
+        system_instruction = params["system_instruction"]
+
+        tools = []
+        if params["tools"]:
+            tools = params["tools"]
+        elif self._tools:
+            tools = self._tools
+        tool_config = None
+        if self._tool_config:
+            tool_config = self._tool_config
+
+        generation_params = self._build_generation_params(
+            system_instruction=system_instruction,
+            tools=tools,
+            tool_config=tool_config,
+        )
+
+        self._maybe_unset_thinking_budget(generation_params)
+
+        # === DOGRAH context-cache hook ===
+        generation_params = await self._dograh_maybe_apply_cache(generation_params)
+        # === END hook ===
+
+        generation_config = GenerateContentConfig(**generation_params)
+
+        await self.start_ttfb_metrics()
+        return await self._client.aio.models.generate_content_stream(
+            model=self._settings.model,
+            contents=messages,
+            config=generation_config,
+        )
 
 
 class DograhGoogleVertexLLMService(GoogleVertexLLMService):
