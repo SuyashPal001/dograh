@@ -37,6 +37,8 @@ def build_pipeline(
     pipeline_metrics_aggregator,
     voicemail_detector=None,
     recording_router=None,
+    pre_llm_processors=None,
+    post_llm_processors=None,
 ):
     """Build the main pipeline with all components.
 
@@ -67,9 +69,13 @@ def build_pipeline(
         processors.append(voicemail_detector.detector())
 
     # Continue with the rest of the pipeline
-    post_llm = [pipeline_engine_callback_processor]
+    post_llm = list(post_llm_processors or [])
+    post_llm.append(pipeline_engine_callback_processor)
     if recording_router:
         post_llm.append(recording_router)
+
+    if pre_llm_processors:
+        processors.extend(pre_llm_processors)
 
     processors.append(user_context_aggregator)
 

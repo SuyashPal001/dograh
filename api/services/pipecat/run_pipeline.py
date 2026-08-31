@@ -33,12 +33,32 @@ from api.services.pipecat.event_handlers import (
     register_event_handlers,
 )
 from api.services.pipecat.in_memory_buffers import InMemoryLogsBuffer
+from sovereign.adapters.pipecat.inbound_guard import InboundGuard
+from sovereign.adapters.pipecat.outbound_guard import OutboundGuard
+from sovereign.fakes import (
+    FakeAuditSink,
+    FakeEscalation,
+    FakeScriptLibrary,
+    FakeTelephony,
+    FakeTenantConfig,
+)
+from sovereign.runtime import build_context
 from api.services.pipecat.pipeline_builder import (
     build_pipeline,
     build_realtime_pipeline,
     create_pipeline_components,
     create_pipeline_task,
 )
+
+# In-memory sovereign ports for this demo deployment — no external compliance
+# infra is wired up yet, so the guards run against fakes that hold real state
+# for the lifetime of this process rather than mocks.
+_SOVEREIGN_AUDIT = FakeAuditSink()
+_SOVEREIGN_ESCALATION = FakeEscalation()
+_SOVEREIGN_TELEPHONY = FakeTelephony()
+_SOVEREIGN_SCRIPTS = FakeScriptLibrary()
+_SOVEREIGN_CONFIG = FakeTenantConfig()
+
 from api.services.pipecat.pipeline_engine_callbacks_processor import (
     PipelineEngineCallbacksProcessor,
 )
@@ -1051,6 +1071,16 @@ async def _run_pipeline_impl(
             voicemail_detector=voicemail_detector,
         )
     else:
+        sovereign_ctx = await build_context(
+            call_id=workflow_run_id,
+            organization_id=workflow.organization_id,
+            audit=_SOVEREIGN_AUDIT,
+            escalation=_SOVEREIGN_ESCALATION,
+            telephony=_SOVEREIGN_TELEPHONY,
+            scripts=_SOVEREIGN_SCRIPTS,
+            config=_SOVEREIGN_CONFIG,
+        )
+
         pipeline = build_pipeline(
             transport,
             stt,
@@ -1063,6 +1093,8 @@ async def _run_pipeline_impl(
             pipeline_metrics_aggregator,
             voicemail_detector=voicemail_detector,
             recording_router=recording_router,
+            pre_llm_processors=[InboundGuard(**sovereign_ctx.inbound)],
+            post_llm_processors=[OutboundGuard(**sovereign_ctx.outbound)],
         )
 
     # Create pipeline task with audio configuration
