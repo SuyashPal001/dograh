@@ -5,7 +5,6 @@ import { createContext, type ReactNode,useCallback, useContext, useEffect, useMe
 
 import { getWorkflowCountApiV1WorkflowCountGet } from "@/client/sdk.gen";
 import { EnterpriseModal } from "@/components/lead-forms/EnterpriseModal";
-import { HireExpertModal } from "@/components/lead-forms/HireExpertModal";
 import type { LeadSource } from "@/components/lead-forms/leadFieldOptions";
 import { OnboardingModal } from "@/components/lead-forms/OnboardingModal";
 import { PostHogEvent } from "@/constants/posthog-events";
@@ -109,12 +108,6 @@ export function LeadFormsProvider({ children }: { children: ReactNode }) {
   return (
     <LeadFormsContext.Provider value={value}>
       {children}
-      <HireExpertModal
-        open={hireOpen}
-        onOpenChange={setHireOpen}
-        source={hireSource}
-        onOpenEnterprise={() => openEnterprise("hire_expert")}
-      />
       <EnterpriseModal
         open={enterpriseOpen}
         onOpenChange={setEnterpriseOpen}
