@@ -4,7 +4,6 @@ import {
   AlertTriangle,
   ArrowUpCircle,
   AudioLines,
-  Brain,
   ChevronLeft,
   ChevronRight,
   CircleDollarSign,
@@ -96,11 +95,6 @@ const NAV_SECTIONS: SidebarNavSection[] = [
         title: "Campaigns",
         url: "/campaigns",
         icon: Megaphone,
-      },
-      {
-        title: "Models",
-        url: "/model-configurations",
-        icon: Brain,
       },
       {
         title: "Telephony",

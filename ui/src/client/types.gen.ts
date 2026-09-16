@@ -2120,6 +2120,26 @@ export type DisplayOptions = {
 };
 
 /**
+ * DispositionCodesResponse
+ *
+ * Disposition codes selectable in org-wide run filters.
+ */
+export type DispositionCodesResponse = {
+    /**
+     * Codes
+     */
+    codes: Array<string>;
+    /**
+     * End Task Reason Codes
+     */
+    end_task_reason_codes: Array<string>;
+    /**
+     * System Codes
+     */
+    system_codes: Array<string>;
+};
+
+/**
  * DocumentListResponseSchema
  *
  * Response schema for list of documents.
@@ -6579,6 +6599,12 @@ export type TransferCallConfig = {
      * Maximum seconds to wait for the destination to answer.
      */
     timeout?: number;
+    /**
+     * Call Disposition
+     *
+     * Optional disposition to record after a successful transfer. When omitted, Dograh records its provider-specific transfer default.
+     */
+    call_disposition?: string | null;
     /**
      * Parameters
      *
@@ -11944,6 +11970,30 @@ export type MigrateModelConfigurationV2ApiV1OrganizationsModelConfigurationsV2Mi
 };
 
 export type MigrateModelConfigurationV2ApiV1OrganizationsModelConfigurationsV2MigratePostResponse = MigrateModelConfigurationV2ApiV1OrganizationsModelConfigurationsV2MigratePostResponses[keyof MigrateModelConfigurationV2ApiV1OrganizationsModelConfigurationsV2MigratePostResponses];
+
+export type GetDispositionCodesApiV1OrganizationsDispositionCodesGetData = {
+    body?: never;
+    headers?: {
+        authorization?: string | null;
+        'X-API-Key'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/organizations/disposition-codes';
+};
+
+export type GetDispositionCodesApiV1OrganizationsDispositionCodesGetErrors = {
+    404: unknown;
+    422: HttpValidationError;
+};
+
+export type GetDispositionCodesApiV1OrganizationsDispositionCodesGetError = GetDispositionCodesApiV1OrganizationsDispositionCodesGetErrors[keyof GetDispositionCodesApiV1OrganizationsDispositionCodesGetErrors];
+
+export type GetDispositionCodesApiV1OrganizationsDispositionCodesGetResponses = {
+    200: DispositionCodesResponse;
+};
+
+export type GetDispositionCodesApiV1OrganizationsDispositionCodesGetResponse = GetDispositionCodesApiV1OrganizationsDispositionCodesGetResponses[keyof GetDispositionCodesApiV1OrganizationsDispositionCodesGetResponses];
 
 export type GetPreferencesApiV1OrganizationsPreferencesGetData = {
     body?: never;
