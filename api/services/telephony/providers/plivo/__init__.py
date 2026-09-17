@@ -101,7 +101,7 @@ async def _ensure_application_id(credentials: Dict[str, Any]) -> Dict[str, Any]:
 
 _UI_METADATA = ProviderUIMetadata(
     display_name="Plivo",
-    docs_url="https://docs.dograh.com/integrations/telephony/plivo",
+    docs_url="https://docs.vani.com/integrations/telephony/plivo",
     fields=[
         ProviderUIField(name="auth_id", label="Auth ID", type="text", sensitive=True),
         ProviderUIField(

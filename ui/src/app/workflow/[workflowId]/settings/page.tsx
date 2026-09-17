@@ -1750,16 +1750,8 @@ function WorkflowSettingsInner({
                                 onSave={saveWorkflowConfigurations}
                             />
 
-                            <WorkflowModelOverridesSection
-                                workflowConfigurations={resolvedWorkflowConfigurationsForRender}
-                                workflowName={workflowName}
-                                onSave={saveWorkflowConfigurations}
-                                modelConfigurationDefaults={modelConfigurationDefaults}
-                                organizationModelConfiguration={organizationModelConfiguration}
-                                modelConfigurationPricing={modelConfigurationPricing}
-                                modelConfigurationLoading={modelConfigurationLoading}
-                                modelConfigurationError={modelConfigurationError}
-                            />
+                            {/* Model Overrides hidden — Vani manages model config automatically.
+                               Un-hide when BYOK or org-level config UI is ready. */}
 
                             {/* Template Variables */}
                             <TemplateVariablesSection

@@ -29,7 +29,7 @@ def _config_loader(value: Dict[str, Any]) -> Dict[str, Any]:
 
 _UI_METADATA = ProviderUIMetadata(
     display_name="Asterisk ARI",
-    docs_url="https://docs.dograh.com/integrations/telephony/asterisk-ari",
+    docs_url="https://docs.vani.com/integrations/telephony/asterisk-ari",
     fields=[
         ProviderUIField(
             name="ari_endpoint",

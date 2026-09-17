@@ -693,7 +693,7 @@ async def _preprocess_credentials_on_save(
 
 _UI_METADATA = ProviderUIMetadata(
     display_name="Cloudonix",
-    docs_url="https://docs.dograh.com/integrations/telephony/cloudonix",
+    docs_url="https://docs.vani.com/integrations/telephony/cloudonix",
     fields=[
         ProviderUIField(
             name="bearer_token",

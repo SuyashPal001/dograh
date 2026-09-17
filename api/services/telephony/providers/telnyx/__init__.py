@@ -110,7 +110,7 @@ async def _ensure_connection_id(credentials: Dict[str, Any]) -> Dict[str, Any]:
 
 _UI_METADATA = ProviderUIMetadata(
     display_name="Telnyx",
-    docs_url="https://docs.dograh.com/integrations/telephony/telnyx",
+    docs_url="https://docs.vani.com/integrations/telephony/telnyx",
     fields=[
         ProviderUIField(
             name="api_key", label="API Key", type="password", sensitive=True

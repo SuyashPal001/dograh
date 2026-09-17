@@ -8,7 +8,6 @@ import {
   ChevronRight,
   Database,
   FileText,
-  Home,
   LogOut,
   type LucideIcon,
   Megaphone,
@@ -71,15 +70,6 @@ type SidebarNavSection = {
 const TELEPHONY_WARNING_COPY = "Action required";
 
 const NAV_SECTIONS: SidebarNavSection[] = [
-  {
-    items: [
-      {
-        title: "Overview",
-        url: "/overview",
-        icon: Home,
-      },
-    ],
-  },
   {
     label: "BUILD",
     items: [

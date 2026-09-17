@@ -13,7 +13,7 @@ from api.services.mps_service_key_client import mps_service_key_client
 from . import _preprocess_credentials_on_save
 from .config import normalize_cloudonix_domain
 
-MANAGED_CONFIGURATION_NAME = "Dograh Cloudonix SIP"
+MANAGED_CONFIGURATION_NAME = "Vani Cloudonix SIP"
 MANAGED_BY = "dograh-mps"
 
 
