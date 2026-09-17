@@ -346,25 +346,24 @@ export default function NewCampaignPage() {
     };
 
     return (
-        <div className="mx-auto w-full max-w-4xl px-6 py-8 space-y-8">
+        <div className="container mx-auto px-4 py-8 space-y-6">
             <div>
                 <Button
                     variant="ghost"
-                    size="sm"
                     onClick={handleBack}
                     className="mb-4 -ml-2 text-muted-foreground"
                 >
-                    <ArrowLeft className="h-4 w-4 mr-1.5" />
+                    <ArrowLeft className="h-4 w-4 mr-2" />
                     Back to Campaigns
                 </Button>
-                <h1 className="text-2xl font-semibold tracking-tight">Create New Campaign</h1>
-                <p className="text-sm text-muted-foreground mt-1">Set up a new campaign to execute workflows at scale</p>
+                <h1 className="text-3xl font-bold">Create New Campaign</h1>
+                <p className="text-muted-foreground mt-1">Set up a new campaign to execute workflows at scale</p>
             </div>
 
             <div>
                     <div className="mb-6">
-                        <h2 className="text-base font-medium">Campaign Details</h2>
-                        <p className="text-sm text-muted-foreground mt-0.5">
+                        <h2 className="text-lg font-semibold">Campaign Details</h2>
+                        <p className="text-muted-foreground mt-0.5">
                             Configure your campaign settings
                         </p>
                     </div>
