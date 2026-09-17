@@ -360,7 +360,7 @@ export default function NewCampaignPage() {
                 <p className="text-muted-foreground mt-1">Set up a new campaign to execute workflows at scale</p>
             </div>
 
-            <div>
+            <div className="rounded-lg border bg-card p-6">
                     <div className="mb-6">
                         <h2 className="text-lg font-semibold">Campaign Details</h2>
                         <p className="text-muted-foreground mt-0.5">
