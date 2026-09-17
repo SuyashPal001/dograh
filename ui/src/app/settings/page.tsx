@@ -15,11 +15,10 @@ import {
 
 export default function SettingsPage() {
   return (
-    <div className="flex justify-center py-12 px-4">
-      <div className="w-full max-w-2xl space-y-6">
+    <div className="container mx-auto px-4 py-8 space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">Platform Settings</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-bold">Platform Settings</h1>
+          <p className="text-muted-foreground mt-1">
             Manage your platform configuration and integrations.
           </p>
         </div>
@@ -77,7 +76,6 @@ export default function SettingsPage() {
             <TelemetrySection />
           </CardContent>
         </Card>
-      </div>
     </div>
   );
 }
