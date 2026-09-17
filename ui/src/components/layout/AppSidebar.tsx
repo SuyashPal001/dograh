@@ -166,7 +166,7 @@ export function AppSidebar() {
         asChild
         tooltip={tooltip}
         className={cn(
-          "transition-colors text-muted-foreground hover:text-foreground text-base",
+          "transition-colors text-muted-foreground hover:text-foreground text-[17px]",
           isItemActive && "font-medium text-foreground"
         )}
       >
@@ -177,7 +177,7 @@ export function AppSidebar() {
           translate="no"
         >
           <Icon
-            className="h-[18px] w-[18px] shrink-0"
+            className="h-5 w-5 shrink-0"
             strokeWidth={1.5}
           />
           <span
@@ -224,15 +224,15 @@ export function AppSidebar() {
     <Button
       variant="ghost"
       size="icon"
-      className="h-7 w-7 shrink-0 cursor-pointer rounded-full bg-foreground hover:bg-foreground/80"
+      className="h-8 w-8 shrink-0 cursor-pointer rounded-full bg-foreground hover:bg-foreground/80"
     >
-      <span className="text-xs font-medium text-background">{userInitials}</span>
+      <span className="text-sm font-medium text-background">{userInitials}</span>
     </Button>
   );
 
   return (
     <Sidebar collapsible="icon" variant="sidebar">
-      <SidebarHeader className="px-3 pt-3 pb-8 border-b-0 notranslate" translate="no">
+      <SidebarHeader className="px-3 pt-6 pb-10 border-b-0 notranslate" translate="no">
         <div className="flex items-center justify-between">
           <Link
             href="/"
@@ -242,9 +242,9 @@ export function AppSidebar() {
             )}
             translate="no"
           >
-            <BrandLogo mark className="h-7" />
+            <BrandLogo mark className="h-8" />
             <span
-              className="text-lg font-semibold tracking-tight text-foreground"
+              className="text-xl font-semibold tracking-tight text-foreground"
               style={{ fontFamily: "'Fraunces', serif" }}
             >
               Agent Studio
@@ -271,7 +271,7 @@ export function AppSidebar() {
         {NAV_SECTIONS.map((section, index) => (
           <SidebarGroup
             key={index}
-            className={index === 0 ? "pt-2" : "pt-6"}
+            className={index === 0 ? "pt-0" : "pt-6"}
           >
             <SidebarMenu>
               {section.items.map((item) => (
