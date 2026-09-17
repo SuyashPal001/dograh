@@ -166,7 +166,7 @@ export function AppSidebar() {
         asChild
         tooltip={tooltip}
         className={cn(
-          "transition-colors text-muted-foreground hover:text-foreground text-[15px]",
+          "transition-colors text-muted-foreground hover:text-foreground text-base",
           isItemActive && "font-medium text-foreground"
         )}
       >
@@ -232,7 +232,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" variant="sidebar">
-      <SidebarHeader className="px-3 py-3 border-b-0 notranslate" translate="no">
+      <SidebarHeader className="px-3 pt-3 pb-8 border-b-0 notranslate" translate="no">
         <div className="flex items-center justify-between">
           <Link
             href="/"
@@ -271,7 +271,7 @@ export function AppSidebar() {
         {NAV_SECTIONS.map((section, index) => (
           <SidebarGroup
             key={index}
-            className={index === 0 ? "pt-2" : "pt-4"}
+            className={index === 0 ? "pt-2" : "pt-6"}
           >
             <SidebarMenu>
               {section.items.map((item) => (
