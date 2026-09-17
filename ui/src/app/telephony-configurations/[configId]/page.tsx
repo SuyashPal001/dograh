@@ -230,12 +230,16 @@ export default function TelephonyConfigurationDetailPage() {
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
       <div>
-        <Link
-          href="/telephony-configurations"
-          className="inline-flex items-center text-sm text-muted-foreground hover:underline"
+        <Button
+          variant="ghost"
+          asChild
+          className="-ml-2 text-muted-foreground"
         >
-          <ArrowLeft className="h-4 w-4 mr-1" /> All configurations
-        </Link>
+          <Link href="/telephony-configurations">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            All configurations
+          </Link>
+        </Button>
       </div>
 
       <Card>
