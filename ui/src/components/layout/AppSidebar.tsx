@@ -237,14 +237,14 @@ export function AppSidebar() {
           <Link
             href="/"
             className={cn(
-              "notranslate flex items-center gap-2",
+              "notranslate flex items-center gap-2.5",
               isCollapsed && "hidden"
             )}
             translate="no"
           >
-            <BrandLogo mark className="h-6" />
+            <BrandLogo mark className="h-7" />
             <span
-              className="text-[15px] font-semibold tracking-tight text-foreground"
+              className="text-lg font-semibold tracking-tight text-foreground"
               style={{ fontFamily: "'Fraunces', serif" }}
             >
               Agent Studio
