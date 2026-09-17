@@ -1,7 +1,7 @@
 import "./globals.css";
 
 import type { Metadata } from "next";
-import { Fraunces, Geist_Mono } from "next/font/google";
+import { DM_Sans, Fraunces, Geist_Mono } from "next/font/google";
 import { Suspense } from "react";
 
 
@@ -17,6 +17,12 @@ import { OrgConfigProvider } from "@/context/OrgConfigContext";
 import { TelephonyConfigWarningsProvider } from "@/context/TelephonyConfigWarningsContext";
 import { AuthProvider } from "@/lib/auth";
 
+
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
@@ -40,7 +46,7 @@ export default function RootLayout({
 }) {
 
   return (
-    <html lang="en" className={`dark ${fraunces.variable} ${geistMono.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`dark ${dmSans.variable} ${fraunces.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <head>
         {/* Inline script to prevent flash of light theme - runs before React hydrates.
             Dark is the locked default: only an explicit stored 'light' opts out. */}
@@ -64,7 +70,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`antialiased ${fraunces.className}`}>
+        className={`antialiased ${dmSans.className}`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
           <SentryErrorBoundary>
             <AuthProvider>
