@@ -224,9 +224,9 @@ export function AppSidebar() {
     <Button
       variant="ghost"
       size="icon"
-      className="h-7 w-7 shrink-0 cursor-pointer rounded-full border border-border/80 bg-muted/40 hover:bg-muted/60"
+      className="h-7 w-7 shrink-0 cursor-pointer rounded-full bg-foreground hover:bg-foreground/80"
     >
-      <span className="text-xs font-medium">{userInitials}</span>
+      <span className="text-xs font-medium text-background">{userInitials}</span>
     </Button>
   );
 
