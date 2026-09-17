@@ -2,7 +2,6 @@
 
 import {
   AlertTriangle,
-  ArrowUpCircle,
   AudioLines,
   ChevronLeft,
   ChevronRight,
@@ -21,7 +20,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React from "react";
 
-import { BrandLogo } from "@/components/BrandLogo";
 import { SidebarTeamSwitcher } from "@/components/layout/SidebarTeamSwitcher";
 import ThemeToggle from "@/components/ThemeSwitcher";
 import { Button } from "@/components/ui/button";
@@ -38,19 +36,15 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useAppConfig } from "@/context/AppConfigContext";
 import { useTelephonyConfigWarnings } from "@/context/TelephonyConfigWarningsContext";
-import { useLatestReleaseVersion } from "@/hooks/useLatestReleaseVersion";
 import type { LocalUser } from "@/lib/auth";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
@@ -63,7 +57,6 @@ type SidebarNavItem = {
 };
 
 type SidebarNavSection = {
-  label?: string;
   items: SidebarNavItem[];
 };
 
@@ -71,7 +64,6 @@ const TELEPHONY_WARNING_COPY = "Action required";
 
 const NAV_SECTIONS: SidebarNavSection[] = [
   {
-    label: "BUILD",
     items: [
       {
         title: "Voice Agents",
@@ -107,7 +99,6 @@ const NAV_SECTIONS: SidebarNavSection[] = [
     ],
   },
   {
-    label: "MANAGE",
     items: [
       {
         title: "Agent Runs",
@@ -128,7 +119,6 @@ export function AppSidebar() {
   const router = useRouter();
   const { state, isMobile, setOpenMobile } = useSidebar();
   const { provider, logout, user } = useAuth();
-  const { config } = useAppConfig();
   const {
     telnyxMissingWebhookPublicKeyCount,
     vonageMissingSignatureSecretCount,
@@ -137,15 +127,6 @@ export function AppSidebar() {
     telnyxMissingWebhookPublicKeyCount > 0 ||
     vonageMissingSignatureSecretCount > 0;
   const isCollapsed = !isMobile && state === "collapsed";
-
-  // Version info from app config context
-  const versionInfo = config ? { ui: config.uiVersion, api: config.apiVersion } : null;
-
-  // Check for updates only on self-hosted (OSS) deployments — cloud is managed for the user.
-  const { latest: latestRelease, isBehind, isLatest } = useLatestReleaseVersion(
-    versionInfo?.ui,
-    { enabled: config?.deploymentMode === "oss" },
-  );
 
   const isActive = (path: string) => pathname.startsWith(path);
 
@@ -184,9 +165,8 @@ export function AppSidebar() {
         asChild
         tooltip={tooltip}
         className={cn(
-          "rounded-xl transition-colors hover:bg-accent hover:text-accent-foreground",
-          isItemActive &&
-            "bg-cta/15 font-semibold text-foreground hover:bg-cta/20 hover:text-foreground"
+          "transition-colors text-muted-foreground hover:text-foreground",
+          isItemActive && "font-medium text-foreground"
         )}
       >
         <Link
@@ -195,17 +175,9 @@ export function AppSidebar() {
           className={cn("relative", isCollapsed && "justify-center")}
           translate="no"
         >
-          {isItemActive && !isCollapsed && (
-            <span
-              className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-cta"
-              aria-hidden
-            />
-          )}
           <Icon
-            className={cn(
-              "h-4 w-4 shrink-0",
-              isItemActive && "text-cta"
-            )}
+            className="h-[18px] w-[18px] shrink-0"
+            strokeWidth={1.5}
           />
           <span
             className={cn("notranslate min-w-0 flex-1 truncate", isCollapsed && "sr-only")}
@@ -258,56 +230,20 @@ export function AppSidebar() {
   );
 
   return (
-    <Sidebar collapsible="icon" variant="floating" className="app-sidebar-dock py-4">
-      <SidebarHeader className="px-2 py-3 notranslate" translate="no">
+    <Sidebar collapsible="icon" variant="sidebar">
+      <SidebarHeader className="px-3 py-3 notranslate" translate="no">
         <div className="flex items-center justify-between">
-          <div className={cn("flex items-center gap-2", isCollapsed && "hidden")}>
-            <Link
-              href="/"
-              className="notranslate flex items-center gap-2 px-1"
-              translate="no"
-            >
-              <BrandLogo mark className="h-6" />
-              {versionInfo && (
-                <span
-                  className="notranslate text-xs font-normal text-muted-foreground"
-                  translate="no"
-                >
-                  v{versionInfo.ui}
-                </span>
-              )}
-            </Link>
-            {isBehind && latestRelease && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <a
-                    href="https://docs.vani.com/deployment/update"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded-md border bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium leading-none text-amber-900 transition-opacity hover:opacity-80 dark:bg-amber-950 dark:text-amber-200"
-                  >
-                    <ArrowUpCircle className="h-3 w-3" />
-                    Update
-                  </a>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  <p>Latest: {latestRelease} - click to see the update guide</p>
-                </TooltipContent>
-              </Tooltip>
+          <Link
+            href="/"
+            className={cn(
+              "notranslate text-lg font-semibold tracking-tight text-foreground",
+              isCollapsed && "hidden"
             )}
-            {isLatest && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="inline-flex items-center rounded-md border bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium leading-none text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
-                    Latest
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  <p>You&apos;re running the latest release</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
-          </div>
+            translate="no"
+            style={{ fontFamily: "'Fraunces', serif" }}
+          >
+            Vani
+          </Link>
 
           <SidebarTrigger className={cn("hover:bg-accent", isCollapsed && "mx-auto")}>
             {isCollapsed ? (
@@ -328,20 +264,9 @@ export function AppSidebar() {
       <SidebarContent className={cn("notranslate", isCollapsed && "px-0")} translate="no">
         {NAV_SECTIONS.map((section, index) => (
           <SidebarGroup
-            key={section.label ?? "overview"}
-            className={index === 0 ? "mt-2" : "mt-6"}
+            key={index}
+            className={index === 0 ? "pt-2" : "pt-4"}
           >
-            {section.label && (
-              <SidebarGroupLabel
-                className={cn(
-                  "notranslate text-xs font-semibold uppercase tracking-wider text-muted-foreground",
-                  isCollapsed && "hidden"
-                )}
-                translate="no"
-              >
-                {section.label}
-              </SidebarGroupLabel>
-            )}
             <SidebarMenu>
               {section.items.map((item) => (
                 <SidebarMenuItem key={item.title}>
@@ -354,101 +279,84 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter
-        className={cn("p-3 notranslate", isCollapsed && "p-2")}
+        className={cn("px-3 py-3 notranslate", isCollapsed && "px-2")}
         translate="no"
       >
-        <div className="space-y-2">
+        <div className={cn("flex items-center gap-2", isCollapsed && "flex-col")}>
           {provider !== "stack" && (
-            <div
-              className={cn(
-                "flex items-center justify-between gap-1 rounded-full border border-border/60 bg-muted/30 p-1",
-                isCollapsed && "flex-col"
-              )}
-            >
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  {userChipTrigger}
-                </DropdownMenuTrigger>
-                <DropdownMenuContent side="top" align="start" className="w-56">
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                      {(user as LocalUser | undefined)?.email && (
-                        <p className="text-xs text-muted-foreground">{(user as LocalUser).email}</p>
-                      )}
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push("/settings")} className="cursor-pointer">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Platform Settings
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => logout()} className="cursor-pointer">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                {userChipTrigger}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="top" align="start" className="w-56">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    {(user as LocalUser | undefined)?.email && (
+                      <p className="text-xs text-muted-foreground">{(user as LocalUser).email}</p>
+                    )}
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => router.push("/settings")} className="cursor-pointer">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Platform Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => logout()} className="cursor-pointer">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
 
           {provider === "stack" && (
-            <div
-              className={cn(
-                "flex items-center justify-between gap-1 rounded-full border border-border/60 bg-muted/30 p-1",
-                isCollapsed && "flex-col"
-              )}
-            >
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  {userChipTrigger}
-                </DropdownMenuTrigger>
-                <DropdownMenuContent side="top" align="start" className="w-56">
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                      {user?.displayName && (
-                        <p className="text-sm font-medium">{user.displayName}</p>
-                      )}
-                      {(user as { primaryEmail?: string })?.primaryEmail && (
-                        <p className="text-xs text-muted-foreground">{(user as { primaryEmail?: string }).primaryEmail}</p>
-                      )}
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push("/handler/account-settings")} className="cursor-pointer">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Account settings
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push("/settings")} className="cursor-pointer">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Platform Settings
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => logout()} className="cursor-pointer">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                {userChipTrigger}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="top" align="start" className="w-56">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    {user?.displayName && (
+                      <p className="text-sm font-medium">{user.displayName}</p>
+                    )}
+                    {(user as { primaryEmail?: string })?.primaryEmail && (
+                      <p className="text-xs text-muted-foreground">{(user as { primaryEmail?: string }).primaryEmail}</p>
+                    )}
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => router.push("/handler/account-settings")} className="cursor-pointer">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Account settings
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push("/settings")} className="cursor-pointer">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Platform Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => logout()} className="cursor-pointer">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
 
-          <div className="mt-1 flex justify-center">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="notranslate" translate="no">
-                  <ThemeToggle
-                    showLabel={false}
-                    className="rounded-full hover:bg-accent hover:text-accent-foreground"
-                  />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side={isCollapsed ? "right" : "top"}>
-                <p>Toggle theme</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="notranslate" translate="no">
+                <ThemeToggle
+                  showLabel={false}
+                  className="rounded-full hover:bg-accent hover:text-accent-foreground"
+                />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side={isCollapsed ? "right" : "top"}>
+              <p>Toggle theme</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </SidebarFooter>
-      <SidebarRail />
     </Sidebar>
   );
 }
