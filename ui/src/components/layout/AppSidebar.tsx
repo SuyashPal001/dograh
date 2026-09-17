@@ -165,7 +165,7 @@ export function AppSidebar() {
         asChild
         tooltip={tooltip}
         className={cn(
-          "transition-colors text-muted-foreground hover:text-foreground",
+          "transition-colors text-muted-foreground hover:text-foreground text-[14px]",
           isItemActive && "font-medium text-foreground"
         )}
       >
@@ -231,7 +231,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" variant="sidebar">
-      <SidebarHeader className="px-3 py-3 notranslate" translate="no">
+      <SidebarHeader className="px-3 py-3 border-b-0 notranslate" translate="no">
         <div className="flex items-center justify-between">
           <Link
             href="/"
@@ -282,65 +282,42 @@ export function AppSidebar() {
         className={cn("px-3 py-3 notranslate", isCollapsed && "px-2")}
         translate="no"
       >
-        <div className={cn("flex items-center gap-2", isCollapsed && "flex-col")}>
-          {provider !== "stack" && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                {userChipTrigger}
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="top" align="start" className="w-56">
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    {(user as LocalUser | undefined)?.email && (
-                      <p className="text-xs text-muted-foreground">{(user as LocalUser).email}</p>
-                    )}
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => router.push("/settings")} className="cursor-pointer">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Platform Settings
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => logout()} className="cursor-pointer">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-
-          {provider === "stack" && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                {userChipTrigger}
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="top" align="start" className="w-56">
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    {user?.displayName && (
-                      <p className="text-sm font-medium">{user.displayName}</p>
-                    )}
-                    {(user as { primaryEmail?: string })?.primaryEmail && (
-                      <p className="text-xs text-muted-foreground">{(user as { primaryEmail?: string }).primaryEmail}</p>
-                    )}
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
+        <div className={cn("flex items-center justify-between", isCollapsed && "flex-col gap-2")}>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              {userChipTrigger}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="start" className="w-56">
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  {provider === "stack" && user?.displayName && (
+                    <p className="text-sm font-medium">{user.displayName}</p>
+                  )}
+                  {provider === "stack" && (user as { primaryEmail?: string })?.primaryEmail && (
+                    <p className="text-xs text-muted-foreground">{(user as { primaryEmail?: string }).primaryEmail}</p>
+                  )}
+                  {provider !== "stack" && (user as LocalUser | undefined)?.email && (
+                    <p className="text-xs text-muted-foreground">{(user as LocalUser).email}</p>
+                  )}
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {provider === "stack" && (
                 <DropdownMenuItem onClick={() => router.push("/handler/account-settings")} className="cursor-pointer">
                   <Settings className="mr-2 h-4 w-4" />
                   Account settings
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push("/settings")} className="cursor-pointer">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Platform Settings
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => logout()} className="cursor-pointer">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+              )}
+              <DropdownMenuItem onClick={() => router.push("/settings")} className="cursor-pointer">
+                <Settings className="mr-2 h-4 w-4" />
+                Platform Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => logout()} className="cursor-pointer">
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <Tooltip>
             <TooltipTrigger asChild>
