@@ -20,6 +20,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React from "react";
 
+import { BrandLogo } from "@/components/BrandLogo";
 import { SidebarTeamSwitcher } from "@/components/layout/SidebarTeamSwitcher";
 import ThemeToggle from "@/components/ThemeSwitcher";
 import { Button } from "@/components/ui/button";
@@ -236,13 +237,18 @@ export function AppSidebar() {
           <Link
             href="/"
             className={cn(
-              "notranslate text-lg font-semibold tracking-tight text-foreground",
+              "notranslate flex items-center gap-2",
               isCollapsed && "hidden"
             )}
             translate="no"
-            style={{ fontFamily: "'Fraunces', serif" }}
           >
-            Vani
+            <BrandLogo mark className="h-6" />
+            <span
+              className="text-[15px] font-semibold tracking-tight text-foreground"
+              style={{ fontFamily: "'Fraunces', serif" }}
+            >
+              Agent Studio
+            </span>
           </Link>
 
           <SidebarTrigger className={cn("hover:bg-accent", isCollapsed && "mx-auto")}>
