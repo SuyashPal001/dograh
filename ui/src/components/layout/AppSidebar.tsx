@@ -166,7 +166,7 @@ export function AppSidebar() {
         asChild
         tooltip={tooltip}
         className={cn(
-          "transition-colors text-muted-foreground hover:text-foreground text-[14px]",
+          "transition-colors text-muted-foreground hover:text-foreground text-[15px]",
           isItemActive && "font-medium text-foreground"
         )}
       >
