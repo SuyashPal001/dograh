@@ -13,7 +13,7 @@ import { ToolBadges } from "@/components/flow/ToolBadges";
 import { FlowNodeData } from "@/components/flow/types";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { NODE_DOCUMENTATION_URLS } from "@/constants/documentation";
+import { NODE_DOCUMENTATION_URLS, rewriteDocsUrl } from "@/constants/documentation";
 import { useAppConfig } from "@/context/AppConfigContext";
 import { copyTextToClipboard } from "@/lib/clipboard";
 import { cn } from "@/lib/utils";
@@ -619,7 +619,7 @@ export const GenericNode = memo(({ data, selected, id, type }: GenericNodeProps)
             : { source: true, target: true });
     const badge = getBadgeForSpec(spec, styleVariant);
     const Icon = spec ? resolveIcon(spec.icon) : Circle;
-    const docUrl = spec?.docs_url ?? DOC_URL_BY_SPEC[type];
+    const docUrl = spec?.docs_url ? rewriteDocsUrl(spec.docs_url) : DOC_URL_BY_SPEC[type];
     const contentLabel = spec?.properties.some((p) => p.name === "prompt")
         ? "Prompt"
         : "Details";

@@ -1,6 +1,7 @@
 "use client";
 
 import { Copy, ExternalLink } from "lucide-react";
+import { rewriteBrandText, rewriteDocsUrl } from "@/constants/documentation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -293,7 +294,7 @@ export function ConfigFormDialog({
             )}
             {currentProvider?.docs_url && (
               <a
-                href={currentProvider.docs_url}
+                href={rewriteDocsUrl(currentProvider.docs_url)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-xs text-blue-600 underline"
@@ -339,7 +340,7 @@ export function ConfigFormDialog({
                     isEdit={isEdit}
                   />
                   {field.description && (
-                    <p className="text-xs text-muted-foreground">{field.description}</p>
+                    <p className="text-xs text-muted-foreground">{rewriteBrandText(field.description)}</p>
                   )}
                 </div>
               ))}

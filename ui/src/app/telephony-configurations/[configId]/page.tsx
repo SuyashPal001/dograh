@@ -319,7 +319,15 @@ export default function TelephonyConfigurationDetailPage() {
                 <div key={k} className="flex justify-between gap-3">
                   <dt className="text-muted-foreground">{k}</dt>
                   <dd className="font-mono text-right truncate max-w-[60%]">
-                    {v && typeof v === "object" ? "Configured" : String(v ?? "")}
+                    {v && typeof v === "object"
+                      ? "Configured"
+                      : (() => {
+                          const s = String(v ?? "");
+                          if (/dograh/i.test(s) && s.length > 8) {
+                            return "\u2022".repeat(Math.max(s.length - 4, 6)) + s.slice(-4);
+                          }
+                          return s;
+                        })()}
                   </dd>
                 </div>
               ))}
