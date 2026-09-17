@@ -40,7 +40,7 @@ export default function RootLayout({
 }) {
 
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" className={`dark ${fraunces.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <head>
         {/* Inline script to prevent flash of light theme - runs before React hydrates.
             Dark is the locked default: only an explicit stored 'light' opts out. */}
@@ -64,7 +64,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${fraunces.variable} ${geistMono.variable} antialiased`}>
+        className={`antialiased ${fraunces.className}`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
           <SentryErrorBoundary>
             <AuthProvider>
